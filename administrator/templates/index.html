@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Giriş Sayfası</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: url('https://source.unsplash.com/collection/190727/1920x1080') center center/cover no-repeat fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .login-container {
+            max-width: 400px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .login-container h2 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group a {
+            color: #333;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+    </style>
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10">
+</head>
+<body>
+    <div class="login-container">
+        <h2>ÖzMel Fitness Giriş Sayfası</h2>
+        <form method="post" action="{% url 'login' %}" onsubmit="return showFailurePopup()">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="userType">Kullanıcı Türü:</label>
+                <select id="userType" name="userType">
+                    <option value="admin">Admin</option> 
+                    <option value="client">Danışan (Client)</option>
+                    <option value="coach">Trainer</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="text" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Şifre:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <button type="submit">Giriş Yap</button>
+                <a href="{% url 'forgot_password' %}">Şifremi Unuttum</a>
+                <a href="{% url 'register' %}">Kayıt Ol</a>
+            </div>
+        </form>
+    </div>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script>
+        function resetForm() {
+            document.getElementById('userType').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function showFailurePopup() {
+            var userType = document.getElementById('userType').value;
+            var email = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+
+            console.log('User Type:', userType);
+            console.log('email:', email);
+            console.log('Password:', password);
+
+            // AJAX ile Django view fonksiyonunu çağır
+            fetch('{% url "login" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({
+                    userType: userType,
+                    email: email,
+                    password: password,
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'error') {
+                    // Başarısız giriş durumu, pop-up göster
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Giriş Başarısız',
+                        text: data.message,
+                        confirmButtonText: 'Tamam'
+                    });
+                } else {
+                    // Create a form element
+                    var form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = data.redirect_url;
+
+                    // Create and append hidden input fields for each parameter
+
+                    var emailInput = document.createElement('input');
+                    emailInput.type = 'hidden';
+                    emailInput.name = 'email';
+                    emailInput.value = email;
+                    form.appendChild(emailInput);
+
+                    // CSRF token
+                    var csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrfmiddlewaretoken';
+                    csrfInput.value = '{{ csrf_token }}';
+                    form.appendChild(csrfInput);
+
+                    // Append the form to the body and submit it
+                    document.body.appendChild(form);
+                    form.submit();
+
+                    //window.location.href = data.redirect_url;              
+                    resetForm();
+                }
+            })
+            return false; // Formun normal submit işlemini engelle
+        }
+    </script>
+</body>
+</html>

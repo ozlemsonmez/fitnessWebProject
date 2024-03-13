@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Sayfası</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Özel stil eklemek için buraya CSS ekleyebilirsiniz */
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="row">
+        <!-- Profil Bilgileri -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <img src="{{ user.profilphoto }}" class="card-img-top" alt="Profil Fotoğrafı">
+                <div class="card-body">
+                    <h5 class="card-title">Profil Bilgileri</h5>
+                    <p class="card-text">Ad: {{ user.name }}</p>
+                    <p class="card-text">E-posta: {{ user.email }}</p>
+                    <p class="card-text">Telefon: {{ user.telefon }}</p>
+                    <p class="card-text">Cinsiyet: {{ user.cinsiyet }}</p>
+                    <p class="card-text">Dogum Tarihi: {{ user.dogumtarihi }}</p>
+                    <!-- Profili Düzenle butonunu tıkladığınızda açılacak modal -->
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editProfileModal">
+                        Profili Düzenle
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- İletişim Formu -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Danışman Mesajı</h5>
+                    <ul>
+                       {{user.coachMessage}}
+                    </ul>
+                    <h5 class="card-title">İletişim Formu</h5>
+                    <form id="contactForm">
+                        <div class="form-group">
+                            <label for="message">Mesajınız:</label>
+                            <textarea class="form-control" id="message" rows="3"></textarea>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="sendMessage()">Gönder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- İlerleme Kayıtları -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">İlerleme Kayıtları</h5>
+                    <p class="card-text">Geçmiş Kilo:{{ user.pastkilo }} <br> Kilo: {{ user.kilo }}</p>
+                    <p class="card-text">Geçmiş Boy: {{ user.pastboy }} <br> Boy: {{ user.boy }}</p>
+                    <p class="card-text">Geçmiş Vücut Yağ Oranı: {{ user.pastyag_orani }} <br> Vücut Yağ Oranı: {{ user.yag_orani }}</p>
+                    <p class="card-text">Geçmiş Vücut Kas Oranı: {{ user.pastkas_orani }} <br> Vücut Kas Oranı: {{ user.kas_orani }}</p>
+                    <!-- Profili Düzenle butonunu tıkladığınızda açılacak modal -->
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editProgresModal">
+                        İlerleme Kayıtlarını Düzenle
+                    </button>
+                </div>
+            </div>
+        </div>
+
+         <!-- İlerleme Kayıtları -->
+         <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Spor Bilgileri</h5>
+                    <p class="card-text">Egzersiz Bilgileri:{{ user.sporprog }} </p>
+                    <p class="card-text">Diet Bilgileri: {{ user.dietprog }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profil Fotoğrafı Yükleme Formu -->
+    <form id="uploadPhotoForm">
+        {% csrf_token %}
+        <div class="form-group mt-3">
+            <label for="profilePhoto">Profil Fotoğrafı Yükle:</label>
+            <input type="file" class="form-control-file" id="profilePhoto" name="profilePhoto" accept="image/*">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="uploadProfilePhoto()">Yükle</button>
+    </form>
+
+    <!-- Modal -->
+    <div class="modal" id="editProfileModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title">Profil Bilgilerini Düzenle</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <form id="editProfileForm">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="editName">Ad:</label>
+                            <input type="text" class="form-control" id="editName" name="editName" value="{{ user.name }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editEmail">E-posta:</label>
+                            <input type="email" class="form-control" id="editEmail" name="editEmail" value="{{ user.email }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editTelefon">Telefon:</label>
+                            <input type="tel" class="form-control" id="editTelefon" name="editTelefon" value="{{ user.telefon }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editCinsiyet">Cinsiyet:</label>
+                            <input type="cinsiyet" class="form-control" id="editCinsiyet" name="editCinsiyet" value="{{ user.cinsiyet }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDogumtarihi">Dogum Tarihi:</label>
+                            <input type="dogumtarihi" class="form-control" id="editDogumtarihi" name="editDogumtarihi" value="{{ user.dogumtarihi }}">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="saveProfileChanges()">Kaydet</button>
+                    </form>
+                </div>
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="editProgresModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title">İlerleme Kayıtlarını Düzenle</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <form id="editProfileForm">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="editKilo">Kilo:</label>
+                            <input type="kilo" class="form-control" id="editKilo" name="editKilo" value="{{ user.kilo }}">
+                        </div>        
+                        <div class="form-group">
+                            <label for="editBoy">Boy:</label>
+                            <input type="boy" class="form-control" id="editBoy" name="editBoy" value="{{ user.boy }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editYag_orani">Yag Oranı:</label>
+                            <input type="yag_orani" class="form-control" id="editYag_orani" name="editYag_orani" value="{{ user.yag_orani }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editKas_orani">Kas Oranı:</label>
+                            <input type="kas_orani" class="form-control" id="editKas_orani" name="editKas_orani" value="{{ user.kas_orani }}">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="saveProgresChanges()">Kaydet</button>
+                    </form>
+                </div>
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function convertToBase64(file, callback) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            callback(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function uploadProfilePhoto() {
+        var photoInput = document.getElementById('profilePhoto');
+        var file = photoInput.files[0];
+
+        if (file) {
+            convertToBase64(file, function (base64) {
+                // AJAX ile Django view fonksiyonunu çağır
+                var formData = new FormData();
+                formData.append('photo', base64);
+                formData.append('email', '{{ user.email }}');
+
+                fetch('{% url "upload_profile_photo" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // İşlem sonrasında yapılacak işlemleri buraya ekleyebilirsiniz
+                    if (data.status === 'success') {
+                        // Başarılı bir şekilde kaydedildiyse modalı kapat
+                        $('#editProfileModal').modal('hide');
+                        // Sayfayı yenileme veya başka bir işlem
+                        location.reload();
+                    } else {
+                        // Hata durumu, kullanıcıya bilgi verilebilir
+                        alert('Yükleme işlemi başarısız oldu.');
+                    }
+                });
+            });
+        } else {
+            alert('Lütfen bir dosya seçin.');
+        }
+    }
+</script>
+
+<script>
+    function sendMessage() {
+        var message = document.getElementById('message').value;
+
+        // AJAX ile Django view fonksiyonunu çağır
+        fetch('{% url "contact_view" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({
+                message: message,
+                email: '{{ user.email }}',
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // İşlem sonrasında yapılacak işlemleri buraya ekleyebilirsiniz
+            if (data.status === 'success') {
+                // Başarılı bir şekilde gönderildiyse kullanıcıya bilgi verebilirsiniz
+                alert('Mesajınız başarıyla gönderildi.');
+            } else {
+                // Hata durumu, kullanıcıya bilgi verilebilir
+                alert('Mesaj gönderme işlemi başarısız oldu.');
+            }
+        });
+    }
+</script>
+
+<script>
+    function saveProgresChanges() {
+        // Form verilerini al
+
+        var kilo = document.getElementById('editKilo').value;
+        var boy = document.getElementById('editBoy').value;
+        var yag_orani = document.getElementById('editYag_orani').value;
+        var kas_orani = document.getElementById('editKas_orani').value;
+
+
+        // AJAX ile Django view fonksiyonunu çağır
+        fetch('{% url "save_progres_changes" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({
+                kilo: kilo,
+                boy: boy,
+                email: '{{ user.email }}',
+                yag_orani: yag_orani,
+                kas_orani: kas_orani,                
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // İşlem sonrasında yapılacak işlemleri buraya ekleyebilirsiniz
+            if (data.status === 'success') {
+                // Başarılı bir şekilde kaydedildiyse modalı kapat
+                $('#editProgresModal').modal('hide');
+                // Sayfayı yenileme veya başka bir işlem
+                location.reload();
+            } else {
+                // Hata durumu, kullanıcıya bilgi verilebilir
+                alert('Kaydetme işlemi başarısız oldu.');
+            }
+        });
+    }
+</script>
+
+<script>
+    function saveProfileChanges() {
+        // Form verilerini al
+        var name = document.getElementById('editName').value;
+        var email = document.getElementById('editEmail').value;
+        var telefon = document.getElementById('editTelefon').value;
+        var cinsiyet = document.getElementById('editCinsiyet').value;
+        var dogumtarihi = document.getElementById('editDogumtarihi').value;
+
+        // AJAX ile Django view fonksiyonunu çağır
+        fetch('{% url "save_profile_changes" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                telefon: telefon,
+                cinsiyet: cinsiyet,
+                dogumtarihi: dogumtarihi,
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // İşlem sonrasında yapılacak işlemleri buraya ekleyebilirsiniz
+            if (data.status === 'success') {
+                // Başarılı bir şekilde kaydedildiyse modalı kapat
+                $('#editProfileModal').modal('hide');
+                // Sayfayı yenileme veya başka bir işlem
+                location.reload();
+            } else {
+                // Hata durumu, kullanıcıya bilgi verilebilir
+                alert('Kaydetme işlemi başarısız oldu.');
+            }
+        });
+    }
+</script>
+
+<!-- Bootstrap JS ve Popper.js -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

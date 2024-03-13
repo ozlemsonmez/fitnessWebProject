@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koç Sayfası - Profil Sayfası</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Özel stil eklemek için buraya CSS ekleyebilirsiniz */
+    </style>
+</head>
+<body>
+
+<div class="container mt-5"> 
+    <div class="row">
+        <!-- Profil Bilgileri -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <img src="{{ user.profilphoto }}" class="card-img-top" alt="Profil Fotoğrafı">
+                <div class="card-body">
+                    <h5 class="card-title">Koç Bilgileri</h5>
+                    <p class="card-text">Ad: {{ user.name }}</p>
+                    <p class="card-text">E-posta: {{ user.email }}</p>
+                    <p class="card-text">Telefon: {{ user.telefon }}</p>
+                    <p class="card-text">Cinsiyet: {{ user.cinsiyet }}</p>
+                    <p class="card-text">Doğum Tarihi: {{ user.dogumtarihi }}</p>
+                    <p class="card-text">Uzmanlik: {{ user.uzmanlik }}</p>
+                    <p class="card-text">Deneyim: {{ user.deneyim }}</p>
+                    <!-- Profili Düzenle butonunu tıkladığınızda açılacak modal -->
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editProfileModal">
+                        Profili Düzenle
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <form id="uploadPhotoForm">
+            {% csrf_token %}
+            <div class="form-group mt-3">
+                <label for="profilePhoto">Profil Fotoğrafı Yükle:</label>
+                <input type="file" class="form-control-file" id="profilePhoto" name="profilePhoto" accept="image/*">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="uploadProfilePhoto()">Yükle</button>
+        </form>
+    
+        {% for kul in clients %}
+            {% if kul.coach == user.email %}
+                <div class="profile-card" {% if kul.usertype == 'client' %} style="order: 1;" {% endif %}>
+                    <img src="{{ kul.profilphoto }}" class="card-img-top" alt="Profil Fotoğrafı"style="max-width: 200px; max-height: 200px;">
+                    <h2>Ad Soyad: {{ kul.name }}</h2>
+                    <p>Mesajı: {{ kul.danismanMessage }}</p>
+                    <p>Kilo: {{ kul.kilo }}</p>
+                    <p>Boy: {{ kul.boy }}</p>
+                    <p>Yag Orani: {{ kul.yag_orani }}</p>
+                    <p>Kas Orani: {{ kul.kas_orani }}</p>
+                    <p>Diet Programı: {{ kul.dietprog }}</p>
+                    <p>Spor Programı: {{ kul.sporprog }}</p>
+                    <div class="profile-card" id="registerButton">
+                        <button class="redirect-button" onclick="openEditClientPopup('{{ kul.email }}', '{{ kul.coachMessage }}', '{{ kul.sporprog }}', '{{ kul.dietprog }}')">Danışanı Düzenle</button>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %} 
+
+        <!-- Danışan Düzenleme Popup -->
+        <div class="modal fade" id="editClientPopup" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Danışan Spor Bilgilerini Düzenle</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editClientForm">
+                            {% csrf_token %}
+                            <input type="hidden" id="editClientEmail" name="editClientEmail" value="">
+                            <div class="form-group">
+                                <label for="editClientUsername">Mesaj:</label>
+                                <input type="text" id="editClientUsername" name="editClientUsername" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editClientBirthdate">Spor Prog:</label>
+                                <input type="text" id="editClientBirthdate" name="editClientBirthdate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editClientGender">Diet Prog:</label>
+                                <input type="text" id="editClientGender" name="editClientGender" required>
+                            </div>
+                            <div class="form-group">
+                                <button type="button" onclick="submitEditClientForm()">Kaydet</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    <!-- Modal Profil Bilgilerini Düzenle -->
+    <div class="modal" id="editProfileModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title">Profil Bilgilerini Düzenle</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <form id="editProfileForm">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="editName">Ad:</label>
+                            <input type="text" class="form-control" id="editName" name="editName" value="{{ user.name }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editEmail">E-posta:</label>
+                            <input type="email" class="form-control" id="editEmail" name="editEmail" value="{{ user.email }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editTelefon">Telefon:</label>
+                            <input type="tel" class="form-control" id="editTelefon" name="editTelefon" value="{{ user.telefon }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editCinsiyet">Cinsiyet:</label>
+                            <input type="text" class="form-control" id="editCinsiyet" name="editCinsiyet" value="{{ user.cinsiyet }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDogumtarihi">Doğum Tarihi:</label>
+                            <input type="text" class="form-control" id="editDogumtarihi" name="editDogumtarihi" value="{{ user.dogumtarihi }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editUzmanlik">Uzmanlik:</label>
+                            <input type="text" class="form-control" id="editUzmanlik" name="editUzmanlik" value="{{ user.uzmanlik }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDeneyim">Deneyim:</label>
+                            <input type="text" class="form-control" id="editDeneyim" name="editDeneyim" value="{{ user.deneyim }}">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="saveProfileChanges()">Kaydet</button>
+                    </form>
+                </div>
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script>
+    function openEditClientPopup(email, name, birthdate, gender) {
+        // Form alanlarını doldur
+        document.getElementById('editClientEmail').value = email;
+        document.getElementById('editClientUsername').value = name;
+        document.getElementById('editClientBirthdate').value = birthdate;
+        document.getElementById('editClientGender').value = gender;
+
+        // Popup'ı aç
+        $('#editClientPopup').modal('show');
+    }
+
+    function submitEditClientForm() {
+        // Form verilerini topla
+        var email = document.getElementById('editClientEmail').value;
+        var mesaj = document.getElementById('editClientUsername').value;
+        var spor = document.getElementById('editClientBirthdate').value;
+        var diet = document.getElementById('editClientGender').value;
+
+        // AJAX ile Django view fonksiyonunu çağır
+        fetch('{% url "edit_client" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({
+                email: email,
+                mesaj: mesaj,
+                spor: spor,
+                diet: diet,
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Başarılı düzenleme durumu, popup'ı kapat
+                $('#editClientPopup').modal('hide');
+                // Sayfayı yenileme veya başka bir işlem
+                location.reload();
+            } else {
+                // Hata durumu, kullanıcıya bilgi verilebilir
+                alert('Düzenleme işlemi başarısız oldu.');
+            }
+        });
+    }
+</script>
+<!-- Fotograf yükleme -->
+<script>
+    function convertToBase64(file, callback) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            callback(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function uploadProfilePhoto() {
+        var photoInput = document.getElementById('profilePhoto');
+        var file = photoInput.files[0];
+
+        if (file) {
+            convertToBase64(file, function (base64) {
+                // AJAX ile Django view fonksiyonunu çağır
+                var formData = new FormData();
+                formData.append('photo', base64);
+                formData.append('email', '{{ user.email }}');
+
+                fetch('{% url "upload_profile_photo" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // İşlem sonrasında yapılacak işlemleri buraya ekleyebilirsiniz
+                    if (data.status === 'success') {
+                        // Başarılı bir şekilde kaydedildiyse modalı kapat
+                        $('#editProfileModal').modal('hide');
+                        // Sayfayı yenileme veya başka bir işlem
+                        location.reload();
+                    } else {
+                        // Hata durumu, kullanıcıya bilgi verilebilir
+                        alert('Yükleme işlemi başarısız oldu.');
+                    }
+                });
+            });
+        } else {
+            alert('Lütfen bir dosya seçin.');
+        }
+    }
+</script>
+
+
+<!-- Profil bilgilerini değiştirme -->
+<script>
+    function saveProfileChanges() {
+        // Form verilerini al
+        var name = document.getElementById('editName').value;
+        var email = document.getElementById('editEmail').value;
+        var telefon = document.getElementById('editTelefon').value;
+        var cinsiyet = document.getElementById('editCinsiyet').value;
+        var dogumtarihi = document.getElementById('editDogumtarihi').value;
+        var uzmanlik = document.getElementById('editUzmanlik').value;
+        var deneyim = document.getElementById('editDeneyim').value;
+        console.log(uzmanlik)
+        console.log(deneyim)
+
+        // AJAX ile Django view fonksiyonunu çağır
+        fetch('{% url "save_coach_changes" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                telefon: telefon,
+                cinsiyet: cinsiyet,
+                dogumtarihi: dogumtarihi,
+                uzmanlik: uzmanlik,
+                deneyim: deneyim,
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // İşlem sonrasında yapılacak işlemleri buraya ekleyebilirsiniz
+            if (data.status === 'success') {
+                // Başarılı bir şekilde kaydedildiyse modalı kapat
+                $('#editProfileModal').modal('hide');
+                // Sayfayı yenileme veya başka bir işlem
+                location.reload();
+            } else {
+                // Hata durumu, kullanıcıya bilgi verilebilir
+                alert('Kaydetme işlemi başarısız oldu.');
+            }
+        });
+    }
+</script>
+
+<!-- Bootstrap JS ve Popper.js -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

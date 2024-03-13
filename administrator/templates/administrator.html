@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Sayfası</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .profile-card {
+            max-width: 300px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: inline-block;
+            margin: 10px;
+        }
+
+        .profile-card img {
+            max-width: 100%;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        h1 { /* Yeni stil ekledik */
+            text-align: center;
+            width: 100%;
+            padding: 20px;
+            background-color: #333;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        h2, p {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .redirect-button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .register-container {
+            display: none;
+            background-color: #fff;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        #registerButton {
+            order: 2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Admin Sayfası</h1>
+
+    {% for user in users %}
+        {% if user.usertype == 'coach' or user.usertype == 'client' %}
+            <div class="profile-card" {% if user.usertype == 'coach' %} style="order: 1;" {% endif %}>
+                <img src="{{ user.profilphoto }}" class="card-img-top" alt="Profil Fotoğrafı">
+                <h2>Ad Soyad: {{ user.name }}</h2>
+                <p>Dogum Tarihi: {{ user.dogumtarihi }}</p>
+                <p>Cinsiyet: {{ user.cinsiyet }}</p>
+                <p>Kullanıcı Türü: {{ user.usertype }}</p>
+                <p>Email: {{ user.email }}</p>
+                <button class="redirect-button" onclick="redirectToProfilePage('{{ user.email }}', '{{ user.usertype }}')">Detayları Gör</button>
+                <button class="redirect-button" onclick="deleteUser('{{ user.email }}')">Sil</button>
+            </div>
+        {% endif %}
+    {% endfor %}
+        
+    <!-- Kayıt Ol Butonu -->
+    <div class="profile-card" id="registerButton">
+        <button class="redirect-button" onclick="openRegisterPopup()">Yeni Kullanıcı Ekle</button>
+    </div>
+
+    <!-- Kayıt Ol Popup -->
+    <div class="register-container" id="registerPopup">
+        <h2>Yeni Kullanıcı Ekleme Sayfası</h2>
+        <form id="registerForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="userType">Kullanıcı Türü:</label>
+                <select id="userType" name="userType">
+                    <option value="client">Danışan (Client)</option>
+                    <option value="coach">Trainer</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="username">Ad Soyad:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">E-posta:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Şifre:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <button type="button" onclick="submitRegisterForm()">Kayıt Et</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script>
+        function openRegisterPopup() {
+            document.getElementById('registerPopup').style.display = 'block';
+        }
+
+        function closeRegisterPopup() {
+            document.getElementById('registerPopup').style.display = 'none';
+        }
+
+        function submitRegisterForm() {
+            // Form verilerini topla
+            var username = document.getElementById('username').value;
+            var email = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+            var userType = document.getElementById('userType').value;
+
+            // Form verilerinin boş olup olmadığını kontrol et
+            if (!username || !email || !password || !userType) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Hata',
+                    text: 'Lütfen tüm alanları doldurun.',
+                    confirmButtonText: 'Tamam'
+                });
+                return; // Boş alanlar varsa işlemi sonlandır
+            }
+
+            // AJAX ile Django view fonksiyonunu çağır
+            fetch('{% url "admin_register" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password,
+                    userType: userType,
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Başarılı kayıt durumu, pop-up göster
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Kayıt Başarılı',
+                        text: 'Giriş sayfasına yönlendiriliyorsunuz.',
+                        confirmButtonText: 'Tamam'
+                    }).then(() => {
+                        // Popup'ı kapat ve sayfayı yeniden yükle
+                        closeRegisterPopup();
+                        location.reload();
+                    });
+                } else {
+                    // Hata durumu, hata mesajını göster
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata',
+                        text: 'Kayıt işlemi sırasında bir hata oluştu.',
+                        confirmButtonText: 'Tamam'
+                    });
+                }
+            });
+        }
+    </script>
+
+    <script>
+        function deleteUser(email) {
+            // Kullanıcıyı silme isteğini gönder
+            fetch('{% url "delete_user" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({
+                    email: email,
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Başarılı silme durumu, pop-up göster
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Silme Başarılı',
+                        text: 'Kullanıcı başarıyla silindi.',
+                        confirmButtonText: 'Tamam'
+                    }).then(() => {
+                        // Sayfayı yeniden yükle
+                        location.reload();
+                    });
+                } else {
+                    // Hata durumu, hata mesajını göster
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata',
+                        text: 'Silme işlemi sırasında bir hata oluştu.',
+                        confirmButtonText: 'Tamam'
+                    });
+                }
+            });
+        }
+    </script>
+    
+
+    <script>
+        function redirectToProfilePage(email, userType) {
+            // Kullanıcı türüne göre yönlendirilecek sayfa adını belirle
+            var pageName = userType === 'client' ? 'client' : 'coach';
+
+            // E-posta ve sayfa adını URL parametreleri olarak ekleyerek yönlendir
+            var redirectURL = '/' + pageName ;
+
+            // Create a form element
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = redirectURL;
+
+            // Create and append hidden input fields for each parameter
+
+            var emailInput = document.createElement('input');
+            emailInput.type = 'hidden';
+            emailInput.name = 'email';
+            emailInput.value = email;
+            form.appendChild(emailInput);
+
+            // CSRF token
+            var csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+
+            // Append the form to the body and submit it
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+</body>
+</html>

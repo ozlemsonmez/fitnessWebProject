@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıt Ol Sayfası</title>
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .register-container {
+            max-width: 400px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .register-container h2 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group a {
+            color: #333;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h2>Kayıt Ol Sayfası</h2>
+        <form method="post" action="{% url 'register' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">Ad Soyad:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">E-posta:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Şifre:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <button type="submit">Kayıt Ol</button>
+            </div>
+        </form>
+    </div>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Form submit olduğunda
+            document.querySelector('form').addEventListener('submit', function(event) {
+                event.preventDefault();  // Formun normal submit işlemini engelle
+
+                // Form verilerini topla
+                var username = document.getElementById('username').value;
+                var email = document.getElementById('email').value;
+                var password = document.getElementById('password').value;
+
+                // AJAX ile Django view fonksiyonunu çağır
+                fetch('{% url "register" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password,
+                    })
+                }) 
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Başarılı kayıt durumu, pop-up göster
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Kayıt Başarılı',
+                            text: 'Giriş sayfasına yönlendiriliyorsunuz.',
+                            confirmButtonText: 'Tamam'
+                        }).then(() => {
+                            // Başarılı kayıt durumunda giriş sayfasına yönlendir
+                            // Create a form element
+                            var form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = data.redirect_url;
+
+                            // Create and append hidden input fields for each parameter
+
+                            var emailInput = document.createElement('input');
+                            emailInput.type = 'hidden';
+                            emailInput.name = 'email';
+                            emailInput.value = email;
+                            form.appendChild(emailInput);
+
+                            // CSRF token
+                            var csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = 'csrfmiddlewaretoken';
+                            csrfInput.value = '{{ csrf_token }}';
+                            form.appendChild(csrfInput);
+
+                            // Append the form to the body and submit it
+                            document.body.appendChild(form);
+                            form.submit();
+
+                        });
+                    } else {
+                        // Başarısız kayıt durumu, pop-up göster
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Kayıt Başarısız',
+                            text: data.message,
+                            confirmButtonText: 'Tamam'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
